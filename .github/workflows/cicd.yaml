@@ -26,6 +26,9 @@ jobs:
     name: Run Integration Tests
     runs-on: ubuntu-latest
     needs: unit-test
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -41,3 +44,21 @@ jobs:
       - name: Verify binary build
         run: |
           ./jwtview --help
+
+      - name: Fetch OIDC token
+        id: fetch-token
+        run: |
+          AUDIENCE="https://www.github.com"
+
+          OIDC_TOKEN=$(curl -sSL -X GET "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -r '.value')
+
+          echo "::add-mask::$OIDC_TOKEN"
+          echo "gha-oidc-token=$OIDC_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Test OIDC token with CLI
+        run: |
+          ./jwtview ${{ steps.fetch-token.outputs.gha-oidc-token }} > parsed.json
+          echo "Issuer: $(jq -r '.iss' parsed.json)"
+          echo "Audience: $(jq -r '.aud' parsed.json)"
+          echo "Expiration: $(jq -r '.exp' parsed.json)"
