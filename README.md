@@ -10,17 +10,22 @@ JwtView is a command-line interface (CLI) tool for viewing and validating JSON W
 
 ## Installation
 
-- Download the latest release from the [releases page](https://github.com/yourusername/jwtview/releases)
+- Download the latest release from the [releases page](https://github.com/jgfranco17/jwtview-cli/releases)
 - Or build from source using Go:
 
   ```bash
-  git clone https://github.com/yourusername/jwtview.git
-  cd jwtview
+  git clone https://github.com/jgfranco17/jwtview-cli.git
+  cd jwtview-cli
+
+  # Build directly
   go build -o jwtview
+
+  # With Just, with environment detection
+  just build
   ```
 
 ## Usage
 
 ```bash
-jwtview <command> [flags]
+jwtview [flags] <token>
 ```
