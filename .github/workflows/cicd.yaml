@@ -45,20 +45,17 @@ jobs:
         run: |
           ./jwtview --help
 
-      - name: Fetch OIDC token
-        id: fetch-token
+      - name: Test CLI against OIDC token
         run: |
+          set -euo pipefail
           AUDIENCE="https://www.github.com"
 
-          OIDC_TOKEN=$(curl -sSL -X GET "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" \
-            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -r '.value')
+          OIDC_TOKEN=$(curl --fail-with-body -sSL -X GET "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -er '.value')
 
-          echo "::add-mask::$OIDC_TOKEN"
-          echo "gha-oidc-token=$OIDC_TOKEN" >> $GITHUB_OUTPUT
-
-      - name: Test OIDC token with CLI
-        run: |
-          ./jwtview ${{ steps.fetch-token.outputs.gha-oidc-token }} > parsed.json
-          echo "Issuer: $(jq -r '.iss' parsed.json)"
-          echo "Audience: $(jq -r '.aud' parsed.json)"
-          echo "Expiration: $(jq -r '.exp' parsed.json)"
+          printf '::add-mask::%s\n' "$OIDC_TOKEN"
+          PARSED_JSON=$(./jwtview "$OIDC_TOKEN" | jq -c .)
+          printf '::add-mask::%s\n' "$PARSED_JSON"
+          echo "Issuer: $(jq -er '.payload.iss' <<< "${PARSED_JSON}")"
+          echo "Workflow Ref: $(jq -er '.payload.job_workflow_ref' <<< "${PARSED_JSON}")"
+          echo "Workflow SHA: $(jq -er '.payload.workflow_sha' <<< "${PARSED_JSON}")"
