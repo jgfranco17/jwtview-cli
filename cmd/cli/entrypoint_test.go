@@ -6,20 +6,14 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
-	"fmt"
-	"os"
-	"slices"
 	"strings"
 	"testing"
 
 	"github.com/jgfranco17/jwtview-cli/cmd/cli"
 	"github.com/jgfranco17/jwtview-cli/pkg/errorhandling"
+	"github.com/jgfranco17/jwtview-cli/pkg/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	envRunIntegrationTests = "RUN_INTEGRATION"
 )
 
 type cliResult struct {
@@ -29,7 +23,7 @@ type cliResult struct {
 }
 
 func TestCLIHelp(t *testing.T) {
-	skipUnlessIntegrationTestsEnabled(t)
+	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	result := runCLI(t, "--help")
 
@@ -38,7 +32,7 @@ func TestCLIHelp(t *testing.T) {
 }
 
 func TestCLIMissingToken(t *testing.T) {
-	skipUnlessIntegrationTestsEnabled(t)
+	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	result := runCLI(t)
 
@@ -47,7 +41,7 @@ func TestCLIMissingToken(t *testing.T) {
 }
 
 func TestCLIInvalidToken(t *testing.T) {
-	skipUnlessIntegrationTestsEnabled(t)
+	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	result := runCLI(t, "not-a-jwt")
 
@@ -56,7 +50,7 @@ func TestCLIInvalidToken(t *testing.T) {
 }
 
 func TestCLIMutuallyExclusiveFlags(t *testing.T) {
-	skipUnlessIntegrationTestsEnabled(t)
+	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	token := fixtureToken(`{"sub":"user-123"}`)
 	result := runCLI(t, "--pretty", "--compact", token)
@@ -66,7 +60,7 @@ func TestCLIMutuallyExclusiveFlags(t *testing.T) {
 }
 
 func TestCLIDecodeToken(t *testing.T) {
-	skipUnlessIntegrationTestsEnabled(t)
+	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	token := fixtureToken(`{"sub":"user-123"}`)
 
@@ -94,7 +88,7 @@ func TestCLIDecodeToken(t *testing.T) {
 }
 
 func TestCLIVerboseLogging(t *testing.T) {
-	skipUnlessIntegrationTestsEnabled(t)
+	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	token := fixtureToken(`{"sub":"user-123"}`)
 	result := runCLI(t, "-vv", token)
@@ -108,16 +102,6 @@ func fixtureToken(payload string) string {
 	claims := base64.RawURLEncoding.EncodeToString([]byte(payload))
 	signature := base64.RawURLEncoding.EncodeToString([]byte("signature"))
 	return header + "." + claims + "." + signature
-}
-
-func skipUnlessIntegrationTestsEnabled(t *testing.T) {
-	flagValue := os.Getenv(envRunIntegrationTests)
-	truthyValues := []string{"1", "true", "yes", "on"}
-
-	if !slices.Contains(truthyValues, strings.ToLower(flagValue)) {
-		message := fmt.Sprintf("Skipping test %s since %s flag is not active", t.Name(), envRunIntegrationTests)
-		t.Skip(message)
-	}
 }
 
 func runCLI(t *testing.T, args ...string) cliResult {
