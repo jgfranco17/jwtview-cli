@@ -19,9 +19,15 @@ type DecodedToken struct {
 	Signature string         `json:"signature"` // base64url, unverified
 }
 
-// ToJSON decodes a JWT and returns it as indented JSON.
-func (d *DecodedToken) ToJSON() (string, error) {
-	out, err := json.MarshalIndent(d, "", "  ")
+// ToJSON returns the decoded token as JSON, pretty-printed or compact.
+func (d *DecodedToken) ToJSON(pretty bool) (string, error) {
+	var out []byte
+	var err error
+	if pretty {
+		out, err = json.MarshalIndent(d, "", "  ")
+	} else {
+		out, err = json.Marshal(d)
+	}
 	if err != nil {
 		return "", fmt.Errorf("marshal decoded token: %w", err)
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
@@ -22,9 +23,9 @@ func main() {
 		// that the user cannot fix, so we fail loudly so it's clear.
 		log.WithError(err).Panic("Failed to parse embedded configuration")
 	}
-
+	ctx := context.Background()
 	command := cli.NewCommandRoot(opts)
-	if err := command.Execute(); err != nil {
+	if err := command.Execute(ctx); err != nil {
 		errorhandling.Exit(os.Stderr, err)
 	}
 }

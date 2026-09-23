@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,6 +16,8 @@ import (
 
 const (
 	flagVerbose string = "verbose"
+	flagPretty  string = "pretty"
+	flagCompact string = "compact"
 )
 
 func init() {
@@ -40,6 +43,8 @@ func (o *Options) SetDefaults() {
 // NewCommandRoot creates a new instance of CommandRegistry
 func NewCommandRoot(options Options) *CommandRoot {
 	var verbosity int
+	var pretty bool
+	var compact bool
 	options.SetDefaults()
 
 	root := &cobra.Command{
@@ -93,7 +98,7 @@ replace signature verification or other token validation.
 				"payload":   len(result.Payload),
 				"signature": result.Signature != "",
 			}).Info("Decoded JWT successfully.")
-			jsonOutput, err := result.ToJSON()
+			jsonOutput, err := result.ToJSON(!compact)
 			if err != nil {
 				return err
 			}
@@ -102,7 +107,12 @@ replace signature verification or other token validation.
 		},
 	}
 
-	root.PersistentFlags().CountVarP(&verbosity, flagVerbose, "v", "Increase log verbosity, repeat for more detail (up to -vvv)")
+	commandFlags := root.PersistentFlags()
+	commandFlags.CountVarP(&verbosity, flagVerbose, "v", "Increase log verbosity, repeat for more detail (up to -vvv)")
+	root.Flags().BoolVar(&pretty, flagPretty, false, "Pretty-print output as multi-line indented JSON")
+	root.Flags().BoolVar(&compact, flagCompact, false, "Print output as a single-line string")
+	root.MarkFlagsMutuallyExclusive(flagPretty, flagCompact)
+
 	return &CommandRoot{
 		rootCmd:   root,
 		verbosity: verbosity,
@@ -110,8 +120,19 @@ replace signature verification or other token validation.
 }
 
 // Execute executes the root command
-func (cr *CommandRoot) Execute() error {
-	return cr.rootCmd.ExecuteContext(context.Background())
+func (cr *CommandRoot) Execute(ctx context.Context) error {
+	return cr.rootCmd.ExecuteContext(ctx)
+}
+
+// SetArgs overrides the command-line arguments, for use in tests.
+func (cr *CommandRoot) SetArgs(args []string) {
+	cr.rootCmd.SetArgs(args)
+}
+
+// SetOutput redirects stdout/stderr, for use in tests.
+func (cr *CommandRoot) SetOutput(out, err io.Writer) {
+	cr.rootCmd.SetOut(out)
+	cr.rootCmd.SetErr(err)
 }
 
 func convertCountToLogLevel(count int) logrus.Level {

@@ -3,6 +3,7 @@ package parsing
 import (
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -51,22 +52,35 @@ func TestReadErrors(t *testing.T) {
 }
 
 func TestDecodedTokenToJSON(t *testing.T) {
-	decoded := &DecodedToken{
-		Header: map[string]any{"alg": "none"},
-		Payload: jwt.MapClaims{
-			"sub": "user-123",
-		},
-		Signature: "signature",
+	tests := []struct {
+		name   string
+		pretty bool
+	}{
+		{name: "pretty", pretty: true},
+		{name: "compact", pretty: false},
 	}
 
-	output, err := decoded.ToJSON()
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			decoded := &DecodedToken{
+				Header: map[string]any{"alg": "none"},
+				Payload: jwt.MapClaims{
+					"sub": "user-123",
+				},
+				Signature: "signature",
+			}
 
-	require.NoError(t, err)
-	var value map[string]any
-	require.NoError(t, json.Unmarshal([]byte(output), &value))
-	assert.Equal(t, map[string]any{"alg": "none"}, value["header"])
-	assert.Equal(t, map[string]any{"sub": "user-123"}, value["payload"])
-	assert.Equal(t, "signature", value["signature"])
+			output, err := decoded.ToJSON(test.pretty)
+
+			require.NoError(t, err)
+			assert.Equal(t, test.pretty, strings.Contains(output, "\n"))
+			var value map[string]any
+			require.NoError(t, json.Unmarshal([]byte(output), &value))
+			assert.Equal(t, map[string]any{"alg": "none"}, value["header"])
+			assert.Equal(t, map[string]any{"sub": "user-123"}, value["payload"])
+			assert.Equal(t, "signature", value["signature"])
+		})
+	}
 }
 
 func fixtureToken(t *testing.T) string {

@@ -11,10 +11,10 @@ func Exit(w io.Writer, err error) {
 		return
 	}
 
-	var toolErr ToolError
-	if errors.Is(err, &toolErr) {
+	var toolErr *ToolError
+	if errors.As(err, &toolErr) {
 		_, _ = w.Write([]byte(toolErr.String()))
-		os.Exit(toolErr.ExitCode)
+		os.Exit(toolErr.ResolvedExitCode())
 	}
 	os.Exit(1)
 }
