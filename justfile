@@ -15,11 +15,19 @@ tidy:
 jwtview *args:
     @go run . {{ args }}
 
-# Run all BDD tests
+# Run all unit tests
 test:
-    @echo "Running unit tests!"
-    @go clean -testcache
+    #!/usr/bin/env bash
+    echo "Running unit tests!"
+    go clean -testcache
     go test -cover ./...
+
+# Run all integration tests
+integration-test:
+    #!/usr/bin/env bash
+    echo "Running integration tests!"
+    go clean -testcache
+    RUN_INTEGRATION=true go test -v -cover ./cmd/cli/...
 
 # Build the binary
 build:
