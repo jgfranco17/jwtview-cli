@@ -22,44 +22,44 @@ type cliResult struct {
 	exitCode int
 }
 
-func TestCLIHelp(t *testing.T) {
+func TestHelpOutput(t *testing.T) {
 	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
-	result := runCLI(t, "--help")
+	result := run(t, "--help")
 
 	assert.Equal(t, 0, result.exitCode)
 	assert.Contains(t, result.stdout, "JwtView is a command-line tool")
 }
 
-func TestCLIMissingToken(t *testing.T) {
+func TestMissingToken(t *testing.T) {
 	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
-	result := runCLI(t)
+	result := run(t)
 
 	assert.Equal(t, 1, result.exitCode)
 	assert.Contains(t, result.stderr, "accepts 1 arg(s), received 0")
 }
 
-func TestCLIInvalidToken(t *testing.T) {
+func TestInvalidToken(t *testing.T) {
 	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
-	result := runCLI(t, "not-a-jwt")
+	result := run(t, "not-a-jwt")
 
 	assert.Equal(t, 1, result.exitCode)
 	assert.Contains(t, result.stderr, "parse failure")
 }
 
-func TestCLIMutuallyExclusiveFlags(t *testing.T) {
+func TestMutuallyExclusiveFlags(t *testing.T) {
 	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	token := fixtureToken(`{"sub":"user-123"}`)
-	result := runCLI(t, "--pretty", "--compact", token)
+	result := run(t, "--pretty", "--compact", token)
 
 	assert.Equal(t, 1, result.exitCode)
 	assert.Contains(t, result.stderr, "none of the others can be")
 }
 
-func TestCLIDecodeToken(t *testing.T) {
+func TestDecodeToken(t *testing.T) {
 	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	token := fixtureToken(`{"sub":"user-123"}`)
@@ -76,7 +76,7 @@ func TestCLIDecodeToken(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := runCLI(t, test.args...)
+			result := run(t, test.args...)
 
 			require.Equal(t, 0, result.exitCode)
 			assert.Contains(t, result.stdout, `"sub"`)
@@ -87,11 +87,11 @@ func TestCLIDecodeToken(t *testing.T) {
 	}
 }
 
-func TestCLIVerboseLogging(t *testing.T) {
+func TestVerboseLogging(t *testing.T) {
 	testutils.SkipUnlessIntegrationTestsEnabled(t)
 
 	token := fixtureToken(`{"sub":"user-123"}`)
-	result := runCLI(t, "-vv", token)
+	result := run(t, "-vv", token)
 
 	require.Equal(t, 0, result.exitCode)
 	assert.Contains(t, result.stderr, "Decoded JWT successfully")
@@ -104,7 +104,7 @@ func fixtureToken(payload string) string {
 	return header + "." + claims + "." + signature
 }
 
-func runCLI(t *testing.T, args ...string) cliResult {
+func run(t *testing.T, args ...string) cliResult {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
 
