@@ -36,7 +36,7 @@ jobs:
         run: pre-commit run --all-files --verbose
 
   test:
-    name: Run unit tests
+    name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
