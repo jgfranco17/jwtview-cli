@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetVersion(t *testing.T) {
+func TestGetVersion(t *testing.T) {
 	tcases := []struct {
 		name            string
 		definition      []byte
@@ -15,16 +15,16 @@ func TestSetVersion(t *testing.T) {
 	}{{
 		name:            "empty definition",
 		expectedError:   "unexpected end of JSON input",
-		expectedVersion: "undefined",
+		expectedVersion: "0.0.0",
 	}, {
 		name:            "invalid json definition",
 		definition:      []byte("invalid"),
 		expectedError:   "invalid character",
-		expectedVersion: "undefined",
+		expectedVersion: "0.0.0",
 	}, {
 		name:            "version missing in definition",
 		definition:      []byte("{}"),
-		expectedVersion: "undefined",
+		expectedVersion: "0.0.0",
 	}, {
 		name:            "all good",
 		definition:      []byte(`{"version":"1.2.3"}`),
