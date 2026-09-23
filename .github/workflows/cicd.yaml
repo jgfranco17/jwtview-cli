@@ -54,7 +54,7 @@ jobs:
             -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -er '.value')
 
           printf '::add-mask::%s\n' "$OIDC_TOKEN"
-          PARSED_JSON=$(./jwtview "$OIDC_TOKEN" | jq -c .)
+          PARSED_JSON=$(./jwtview -vv "$OIDC_TOKEN" | jq -c .)
           printf '::add-mask::%s\n' "$PARSED_JSON"
           echo "Issuer: $(jq -er '.payload.iss' <<< "${PARSED_JSON}")"
           echo "Workflow Ref: $(jq -er '.payload.job_workflow_ref' <<< "${PARSED_JSON}")"
