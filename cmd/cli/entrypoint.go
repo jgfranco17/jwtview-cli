@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -96,7 +97,7 @@ replace signature verification or other token validation.
 			if err != nil {
 				return err
 			}
-			cmd.Println(jsonOutput)
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), jsonOutput)
 			return nil
 		},
 	}
